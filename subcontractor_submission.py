@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
 """
 Builder's Black Book - Subcontractor Submission Form
-Mobile-friendly version (no auto-submit on Enter)
+Saves to Google Sheets (Recommended)
 """
 
 import streamlit as st
 import pandas as pd
-from pathlib import Path
 from datetime import datetime
-
-# ================== FILE PATHS ==================
-PENDING_CSV = Path("data/pending_subcontractors.csv")
-ASSETS_PATH = Path("assets")
-
-# Create data folder if it doesn't exist
-PENDING_CSV.parent.mkdir(parents=True, exist_ok=True)
+import gspread
+from google.oauth2.service_account import Credentials
 
 st.set_page_config(
     page_title="Join Builder's Black Book",
@@ -22,15 +16,26 @@ st.set_page_config(
     layout="centered"
 )
 
+# ================== GOOGLE SHEETS CONNECTION ==================
+@st.cache_resource
+def get_gsheet_connection():
+    scope = ["https://www.googleapis.com/auth/spreadsheets"]
+    creds = Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"],
+        scopes=scope
+    )
+    client = gspread.authorize(creds)
+    # ←←← CHANGE THIS TO YOUR GOOGLE SHEET NAME
+    sheet = client.open("Builder's Black Book - Pending Submissions").sheet1
+    return sheet
+
+sheet = get_gsheet_connection()
+
 # ================== LOGO HEADER ==================
 col_logo, col_title = st.columns([1, 4])
 
 with col_logo:
-    logo_path = ASSETS_PATH / "logo.svg"
-    if logo_path.exists():
-        st.image(str(logo_path), width=110)
-    else:
-        st.image("https://via.placeholder.com/110x38/1a365d/ffffff?text=BB", width=110)
+    st.image("https://via.placeholder.com/110x38/1a365d/ffffff?text=BB", width=110)
 
 with col_title:
     st.title("Join Builder's Black Book")
@@ -49,8 +54,7 @@ Your information stays private — we do not sell or distribute your data.
 
 st.markdown("---")
 
-# ================== FORM FIELDS (No st.form wrapper) ==================
-
+# ================== FORM ==================
 st.subheader("Your Company")
 
 col1, col2 = st.columns(2)
@@ -121,38 +125,30 @@ notes = st.text_area(
 
 st.markdown("---")
 
-# ================== MANUAL SUBMIT BUTTON ==================
 submitted = st.button("Submit My Information", type="primary", use_container_width=True)
 
 if submitted:
     if not company_name or not primary_trade or not phone or not email:
         st.error("Please fill out Company Name, Primary Trade(s), Phone, and Email.")
     else:
-        new_submission = {
-            "Company Name": company_name,
-            "Primary Trade": ", ".join(primary_trade),
-            "Other Trades": other_trades,
-            "Phone": phone,
-            "Email": email,
-            "Website": website,
-            "Areas Served": areas_served,
-            "Contact Name": contact_name,
-            "Biggest Project Worked On": biggest_project,
-            "Licensed & Insured": licensed_insured,
-            "Portfolio Link": portfolio_link,
-            "Notes": notes,
-            "Date Submitted": datetime.now().strftime("%Y-%m-%d"),
-            "Status": "Pending Review"
-        }
+        new_row = [
+            datetime.now().strftime("%Y-%m-%d %H:%M"),
+            company_name,
+            ", ".join(primary_trade),
+            other_trades,
+            phone,
+            email,
+            website,
+            areas_served,
+            contact_name,
+            biggest_project,
+            licensed_insured,
+            portfolio_link,
+            notes
+        ]
 
-        # Load existing data or create new
-        if PENDING_CSV.exists():
-            pending_df = pd.read_csv(PENDING_CSV)
-            pending_df = pd.concat([pending_df, pd.DataFrame([new_submission])], ignore_index=True)
-        else:
-            pending_df = pd.DataFrame([new_submission])
-
-        pending_df.to_csv(PENDING_CSV, index=False)
+        # Append to Google Sheet
+        sheet.append_row(new_row)
 
         st.success("✅ Thank you! Your information has been submitted for review.")
         st.info("We’ll review your submission and reach out if we think there may be a good project fit.")
