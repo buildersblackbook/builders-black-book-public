@@ -20,22 +20,20 @@ st.set_page_config(
 )
 
 # ================== GOOGLE SHEETS CONNECTION ==================
+import gspread
+
 @st.cache_resource
 def get_gsheet_connection():
     try:
+        # Use service_account_from_dict (more reliable on Streamlit Cloud)
         gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
         sheet = gc.open("Builder's Black Book - Pending Submissions").sheet1
         return sheet
     except Exception as e:
         st.error("❌ Unable to connect to the submission system.")
+        st.error(f"Error type: {type(e).__name__}")
         st.error("Please try again in a few minutes.")
         st.stop()
-
-# Try to connect to Google Sheets
-try:
-    sheet = get_gsheet_connection()
-except:
-    sheet = None
 
 # ================== LOGO HEADER ==================
 col_logo, col_title = st.columns([1, 4])
