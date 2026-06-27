@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """
 Builder's Black Book - Subcontractor Submission Form
-Saves to Google Sheets (Recommended)
+With better error handling
 """
 
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 import gspread
-from google.oauth2.service_account import Credentials
+
+# ================== FILE PATHS ==================
+PENDING_CSV = "data/pending_subcontractors.csv"
+ASSETS_PATH = "assets"
 
 st.set_page_config(
     page_title="Join Builder's Black Book",
@@ -16,9 +19,7 @@ st.set_page_config(
     layout="centered"
 )
 
-## ================== GOOGLE SHEETS CONNECTION ==================
-import gspread
-
+# ================== GOOGLE SHEETS CONNECTION ==================
 @st.cache_resource
 def get_gsheet_connection():
     try:
@@ -26,9 +27,15 @@ def get_gsheet_connection():
         sheet = gc.open("Builder's Black Book - Pending Submissions").sheet1
         return sheet
     except Exception as e:
-        st.error("❌ Failed to connect to Google Sheets.")
-        st.error(f"Error: {str(e)}")
+        st.error("❌ Unable to connect to the submission system.")
+        st.error("Please try again in a few minutes.")
         st.stop()
+
+# Try to connect to Google Sheets
+try:
+    sheet = get_gsheet_connection()
+except:
+    sheet = None
 
 # ================== LOGO HEADER ==================
 col_logo, col_title = st.columns([1, 4])
@@ -124,6 +131,7 @@ notes = st.text_area(
 
 st.markdown("---")
 
+# ================== SUBMIT BUTTON ==================
 submitted = st.button("Submit My Information", type="primary", use_container_width=True)
 
 if submitted:
@@ -146,13 +154,16 @@ if submitted:
             notes
         ]
 
-        # Improved error handling with visible error
+        # Try to save to Google Sheets
         try:
-            sheet.append_row(new_row)
-            st.success("✅ Thank you! Your information has been submitted for review.")
-            st.info("We’ll review your submission and reach out if we think there may be a good project fit.")
+            if sheet is None:
+                st.error("❌ Submission system is currently unavailable.")
+                st.error("Please try again in a few minutes or contact us directly.")
+            else:
+                sheet.append_row(new_row)
+                st.success("✅ Thank you! Your information has been submitted for review.")
+                st.info("We’ll review your submission and reach out if we think there may be a good project fit.")
         except Exception as e:
             st.error("❌ Something went wrong while saving your submission.")
-            st.error(f"**Error Type:** {type(e).__name__}")
-            st.error(f"**Error Message:** {str(e)}")
-            st.warning("Please take a screenshot of this error and send it to us.")
+            st.error(f"Error: {str(e)}")
+            st.warning("Please try again in a few minutes.")
