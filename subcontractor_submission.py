@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Builder's Black Book - Subcontractor Submission Form
-Saves submissions to Google Sheets (Recommended Version)
+Saves to Google Sheets (Recommended)
 """
 
 import streamlit as st
@@ -9,14 +9,6 @@ import pandas as pd
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
-from pathlib import Path
-
-# ================== FILE PATHS (Fallback) ==================
-PENDING_CSV = Path("data/pending_subcontractors.csv")
-ASSETS_PATH = Path("assets")
-
-# Create data folder if it doesn't exist (safety net)
-PENDING_CSV.parent.mkdir(parents=True, exist_ok=True)
 
 st.set_page_config(
     page_title="Join Builder's Black Book",
@@ -25,16 +17,16 @@ st.set_page_config(
 )
 
 # ================== GOOGLE SHEETS CONNECTION ==================
+import gspread
+from google.oauth2.service_account import Credentials
+
 @st.cache_resource
 def get_gsheet_connection():
     scope = ["https://www.googleapis.com/auth/spreadsheets"]
-    creds = Credentials.from_service_account_info(
-        st.secrets["gcp_service_account"],
-        scopes=scope
-    )
-    client = gspread.authorize(creds)
-    # ←←← Make sure this matches the name of your Google Sheet
-    sheet = client.open("Builder's Black Book - Pending Submissions").sheet1
+    
+    # Use gspread's built-in method (more reliable on Streamlit Cloud)
+    gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
+    sheet = gc.open("Builder's Black Book - Pending Submissions").sheet1
     return sheet
 
 sheet = get_gsheet_connection()
@@ -43,11 +35,7 @@ sheet = get_gsheet_connection()
 col_logo, col_title = st.columns([1, 4])
 
 with col_logo:
-    logo_path = ASSETS_PATH / "logo.svg"
-    if logo_path.exists():
-        st.image(str(logo_path), width=110)
-    else:
-        st.image("https://via.placeholder.com/110x38/1a365d/ffffff?text=BB", width=110)
+    st.image("https://via.placeholder.com/110x38/1a365d/ffffff?text=BB", width=110)
 
 with col_title:
     st.title("Join Builder's Black Book")
@@ -66,8 +54,7 @@ Your information stays private — we do not sell or distribute your data.
 
 st.markdown("---")
 
-# ================== FORM FIELDS ==================
-
+# ================== FORM ==================
 st.subheader("Your Company")
 
 col1, col2 = st.columns(2)
@@ -138,7 +125,6 @@ notes = st.text_area(
 
 st.markdown("---")
 
-# ================== MANUAL SUBMIT BUTTON ==================
 submitted = st.button("Submit My Information", type="primary", use_container_width=True)
 
 if submitted:
