@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Builder's Black Book — Logo Assets</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+    
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #f8fafc;
+      margin: 0;
+      padding: 48px 24px;
+      color: #0f172a;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+      color: #1a365d;
+    }
+    .subtitle {
+      color: #475569;
+      font-size: 15px;
+      margin-bottom: 40px;
+    }
+    .section {
+      margin-bottom: 48px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      margin-bottom: 12px;
+    }
+    .logo-card {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+      margin-bottom: 16px;
+    }
+    .logo-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 24px;
+      min-height: 140px;
+    }
+    .logo-display.dark {
+      background: #0f172a;
+    }
+    .logo-display svg {
+      max-width: 100%;
+      height: auto;
+    }
+    .usage {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 13px;
+    }
+    .usage code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: ui-monospace, monospace;
+      font-size: 12px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+    .file-list {
+      background: white;
+      border-radius: 8px;
+      padding: 20px 24px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+    .file-list ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .file-list li {
+      padding: 8px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-family: ui-monospace, monospace;
+      font-size: 13px;
+    }
+    .file-list li:last-child {
+      border-bottom: none;
+    }
+    .colors {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .swatch {
+      width: 42px;
+      height: 42px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+    .note {
+      font-size: 13px;
+      color: #64748b;
+      background: #f1f5f9;
+      padding: 14px 18px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Builder's Black Book</h1>
+    <p class="subtitle">Logo assets • Clean professional branding</p>
+
+    <!-- Primary Horizontal -->
+    <div class="section">
+      <div class="section-title">Primary Logo (Horizontal)</div>
+      <div class="logo-card">
+        <div class="logo-display">
+          <img src="logo-wide.jpg" alt="Builder's Black Book horizontal logo" style="max-height: 110px; width: auto;">
+          <!-- SVG preferred for production -->
+          <div style="margin-left: 32px; opacity: 0.9;">
+            <object type="image/svg+xml" data="logo.svg" style="max-height: 110px; width: auto;"></object>
+          </div>
+        </div>
+        <div class="usage">
+          <strong>Recommended:</strong> Use <code>logo.svg</code> (vector, crisp at any size). <code>logo-wide.jpg</code> is the AI-generated raster version.
+        </div>
+      </div>
+    </div>
+
+    <!-- Square / Lockup -->
+    <div class="section">
+      <div class="section-title">Square Version</div>
+      <div class="logo-card">
+        <div class="logo-display">
+          <img src="logo-square.jpg" alt="Builder's Black Book square logo" style="max-height: 180px; width: auto;">
+        </div>
+        <div class="usage">
+          Use <code>logo-square.jpg</code> or create a square crop of the SVG.
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Stacked -->
+      <div class="section">
+        <div class="section-title">Stacked / Vertical</div>
+        <div class="logo-card">
+          <div class="logo-display">
+            <object type="image/svg+xml" data="logo-stacked.svg" style="max-height: 140px;"></object>
+          </div>
+          <div class="usage">
+            Great for mobile headers, footers, or narrow spaces.
+          </div>
+        </div>
+      </div>
+
+      <!-- Icon -->
+      <div class="section">
+        <div class="section-title">Icon / App Mark</div>
+        <div class="logo-card">
+          <div class="logo-display" style="justify-content: center;">
+            <object type="image/svg+xml" data="logo-icon.svg" style="width: 128px; height: 128px;"></object>
+          </div>
+          <div class="usage">
+            Use <code>logo-icon.svg</code> or <code>logo-icon.jpg</code> for favicon, app icon, or avatar.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monochrome -->
+    <div class="section">
+      <div class="section-title">Monochrome (Black)</div>
+      <div class="logo-card">
+        <div class="logo-display">
+          <object type="image/svg+xml" data="logo-mono.svg" style="max-height: 110px;"></object>
+        </div>
+        <div class="usage">
+          Ideal for dark backgrounds, one-color printing, or when full color is unavailable. Swap fill colors as needed.
+        </div>
+      </div>
+    </div>
+
+    <!-- Color palette -->
+    <div class="section">
+      <div class="section-title">Brand Colors</div>
+      <div class="logo-card">
+        <div class="colors">
+          <div>
+            <div class="swatch" style="background:#1a365d"></div>
+            <div style="font-size:11px; margin-top:4px; text-align:center; color:#64748b;">#1a365d<br>Navy</div>
+          </div>
+          <div>
+            <div class="swatch" style="background:#0f172a"></div>
+            <div style="font-size:11px; margin-top:4px; text-align:center; color:#64748b;">#0f172a<br>Near Black</div>
+          </div>
+          <div>
+            <div class="swatch" style="background:#d97706"></div>
+            <div style="font-size:11px; margin-top:4px; text-align:center; color:#64748b;">#d97706<br>Amber accent</div>
+          </div>
+          <div>
+            <div class="swatch" style="background:#f8fafc; border-color:#cbd5e1"></div>
+            <div style="font-size:11px; margin-top:4px; text-align:center; color:#64748b;">#f8fafc<br>Paper</div>
+          </div>
+        </div>
+        <p style="margin-top: 20px; font-size: 13px; color: #475569;">
+          These colors are consistent with the existing dashboard and report styling.
+        </p>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Usage notes:</strong><br>
+      • Prefer the <strong>.svg</strong> files for all digital use — they scale perfectly.<br>
+      • The JPG versions are provided as visual references / quick placeholders.<br>
+      • For best results on dark backgrounds, use the monochrome version with inverted colors or light text variant.<br>
+      • The book icon incorporates a subtle blueprint grid + roof gable to represent both "reference book" and construction activity.
+    </div>
+
+    <div style="margin-top: 60px; font-size: 12px; color: #94a3b8; text-align: center;">
+      Builder's Black Book • Nashville Residential Permit Intelligence
+    </div>
+  </div>
+</body>
+</html>

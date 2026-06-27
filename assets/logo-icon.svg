@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle optional for app icon feel -->
+  <rect width="128" height="128" rx="24" fill="#1a365d"/>
+  
+  <!-- Book centered in circle -->
+  <!-- Book body -->
+  <rect x="26" y="30" width="76" height="68" rx="5" fill="#0f172a"/>
+  <!-- Spine -->
+  <rect x="26" y="30" width="12" height="68" fill="#020617"/>
+  <!-- Page area -->
+  <rect x="42" y="37" width="54" height="54" rx="2" fill="#f8fafc"/>
+  
+  <!-- Blueprint grid -->
+  <g stroke="#1a365d" stroke-width="1.5" opacity="0.18">
+    <line x1="46" y1="48" x2="91" y2="48"/>
+    <line x1="46" y1="58" x2="91" y2="58"/>
+    <line x1="46" y1="68" x2="91" y2="68"/>
+    <line x1="46" y1="78" x2="91" y2="78"/>
+    <line x1="55" y1="41" x2="55" y2="87"/>
+    <line x1="68" y1="41" x2="68" y2="87"/>
+    <line x1="81" y1="41" x2="81" y2="87"/>
+  </g>
+  
+  <!-- Roof accent -->
+  <polygon points="48,41 64,28 80,41" fill="none" stroke="#f59e0b" stroke-width="3.5" stroke-linejoin="round"/>
+  <line x1="48" y1="41" x2="80" y2="41" stroke="#f59e0b" stroke-width="1.8" opacity="0.6"/>
+</svg>

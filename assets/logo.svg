@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="420" height="140" viewBox="0 0 420 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Transparent background. Add <rect fill="#fff"/> if a white bg is needed. -->
+
+  <!-- Icon: Book -->
+  <g id="book-icon">
+    <!-- Main book cover -->
+    <rect x="28" y="22" width="72" height="96" rx="4" fill="#1a365d"/>
+    <!-- Spine -->
+    <rect x="28" y="22" width="10" height="96" fill="#0f172a"/>
+    <!-- Inner pages area -->
+    <rect x="42" y="30" width="52" height="80" rx="2" fill="#f8fafc"/>
+    
+    <!-- Blueprint-style grid on pages (subtle) -->
+    <g stroke="#1a365d" stroke-width="1.2" opacity="0.22">
+      <!-- Horizontal lines -->
+      <line x1="46" y1="42" x2="90" y2="42"/>
+      <line x1="46" y1="54" x2="90" y2="54"/>
+      <line x1="46" y1="66" x2="90" y2="66"/>
+      <line x1="46" y1="78" x2="90" y2="78"/>
+      <line x1="46" y1="90" x2="90" y2="90"/>
+      <!-- Vertical lines -->
+      <line x1="56" y1="34" x2="56" y2="106"/>
+      <line x1="68" y1="34" x2="68" y2="106"/>
+      <line x1="80" y1="34" x2="80" y2="106"/>
+    </g>
+
+    <!-- Subtle roof gable accent (builder element) -->
+    <polygon points="52,34 64,20 76,34" fill="none" stroke="#d97706" stroke-width="3" stroke-linejoin="round"/>
+    <!-- Tiny roof highlight line -->
+    <line x1="52" y1="34" x2="76" y2="34" stroke="#d97706" stroke-width="1.5" opacity="0.6"/>
+  </g>
+
+  <!-- Wordmark -->
+  <!-- "Builder's" -->
+  <text 
+    x="120" 
+    y="68" 
+    font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" 
+    font-size="28" 
+    font-weight="600" 
+    fill="#1a365d" 
+    letter-spacing="-0.5">Builder's</text>
+
+  <!-- "BLACK BOOK" -->
+  <text 
+    x="120" 
+    y="102" 
+    font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" 
+    font-size="32" 
+    font-weight="800" 
+    fill="#0f172a" 
+    letter-spacing="1.5">BLACK BOOK</text>
+
+</svg>

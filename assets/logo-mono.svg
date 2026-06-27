@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="420" height="140" viewBox="0 0 420 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Transparent background -->
+
+  <!-- Monochrome Book Icon -->
+  <g id="book-icon">
+    <!-- Book cover -->
+    <rect x="28" y="22" width="72" height="96" rx="4" fill="#111827"/>
+    <!-- Spine -->
+    <rect x="28" y="22" width="10" height="96" fill="#000000"/>
+    <!-- Pages -->
+    <rect x="42" y="30" width="52" height="80" rx="2" fill="#f1f5f9"/>
+    
+    <!-- Grid lines (darker for visibility) -->
+    <g stroke="#334155" stroke-width="1.2" opacity="0.35">
+      <line x1="46" y1="42" x2="90" y2="42"/>
+      <line x1="46" y1="54" x2="90" y2="54"/>
+      <line x1="46" y1="66" x2="90" y2="66"/>
+      <line x1="46" y1="78" x2="90" y2="78"/>
+      <line x1="46" y1="90" x2="90" y2="90"/>
+      <line x1="56" y1="34" x2="56" y2="106"/>
+      <line x1="68" y1="34" x2="68" y2="106"/>
+      <line x1="80" y1="34" x2="80" y2="106"/>
+    </g>
+
+    <!-- Roof accent in dark -->
+    <polygon points="52,34 64,20 76,34" fill="none" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+    <line x1="52" y1="34" x2="76" y2="34" stroke="#111827" stroke-width="1.5" opacity="0.5"/>
+  </g>
+
+  <!-- Wordmark - Monochrome -->
+  <text 
+    x="120" 
+    y="68" 
+    font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" 
+    font-size="28" 
+    font-weight="600" 
+    fill="#111827" 
+    letter-spacing="-0.5">Builder's</text>
+
+  <text 
+    x="120" 
+    y="102" 
+    font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" 
+    font-size="32" 
+    font-weight="800" 
+    fill="#000000" 
+    letter-spacing="1.5">BLACK BOOK</text>
+</svg>
