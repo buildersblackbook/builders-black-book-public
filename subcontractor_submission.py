@@ -161,8 +161,12 @@ if submitted:
             notes
         ]
 
-        # Append to Google Sheet
-        sheet.append_row(new_row)
-
-        st.success("✅ Thank you! Your information has been submitted for review.")
-        st.info("We’ll review your submission and reach out if we think there may be a good project fit.")
+        # Try to save to Google Sheets with error handling
+        try:
+            sheet.append_row(new_row)
+            st.success("✅ Thank you! Your information has been submitted for review.")
+            st.info("We’ll review your submission and reach out if we think there may be a good project fit.")
+        except Exception as e:
+            st.error("❌ Something went wrong while saving your submission.")
+            st.error("Please try again in a few minutes or contact us directly.")
+            # Optional: You can also log the error here if needed
