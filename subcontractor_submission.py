@@ -18,18 +18,32 @@ st.set_page_config(
 
 # ================== GOOGLE SHEETS CONNECTION ==================
 import gspread
-from google.oauth2.service_account import Credentials
 
 @st.cache_resource
 def get_gsheet_connection():
-    scope = ["https://www.googleapis.com/auth/spreadsheets"]
-    
-    # Use gspread's built-in method (more reliable on Streamlit Cloud)
-    gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
-    sheet = gc.open("Builder's Black Book - Pending Submissions").sheet1
-    return sheet
+    try:
+        gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
+        sheet = gc.open("Builder's Black Book - Pending Submissions").sheet1
+        return sheet
 
-sheet = get_gsheet_connection()
+    except KeyError:
+        st.error("❌ Google Sheets credentials not found in app secrets.")
+        st.error("Please go to **Manage app → Secrets** and add your `gcp_service_account`.")
+        st.stop()
+
+    except gspread.exceptions.SpreadsheetNotFound:
+        st.error("❌ Google Sheet not found.")
+        st.error("Make sure the sheet name is exactly: `Builder's Black Book - Pending Submissions`")
+        st.stop()
+
+    except Exception as e:
+        st.error("❌ Failed to connect to Google Sheets.")
+        st.error(f"Error type: {type(e).__name__}")
+        st.error("Please check the following:")
+        st.error("• Service account has **Editor** access to the Google Sheet")
+        st.error("• Google Sheets API is enabled in Google Cloud Console")
+        st.error("• `private_key` in Secrets is correctly formatted using triple quotes")
+        st.stop()
 
 # ================== LOGO HEADER ==================
 col_logo, col_title = st.columns([1, 4])
