@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
 Builder's Black Book - Subcontractor Submission Form
-Option A: Google Sheets (Primary) + CSV Fallback
+Primary: Supabase | Fallback: CSV
 """
 
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
-import gspread
+from supabase import create_client, Client
 
 # ================== FILE PATHS ==================
 PENDING_CSV = Path("data/pending_subcontractors.csv")
 ASSETS_PATH = Path("assets")
 
-# Create the data folder if it doesn't exist
+# Create data folder if it doesn't exist
 PENDING_CSV.parent.mkdir(parents=True, exist_ok=True)
 
 st.set_page_config(
@@ -23,13 +23,12 @@ st.set_page_config(
     layout="centered"
 )
 
-# ================== GOOGLE SHEETS CONNECTION ==================
-def get_google_sheet():
-    """Try to connect to Google Sheets. Returns sheet object or None."""
+# ================== SUPABASE CONNECTION ==================
+def get_supabase_client() -> Client:
     try:
-        gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
-        sheet = gc.open("Builder's Black Book - Pending Submissions").sheet1
-        return sheet
+        url = st.secrets["SUPABASE_URL"]
+        key = st.secrets["SUPABASE_KEY"]
+        return create_client(url, key)
     except Exception as e:
         return None
 
@@ -139,37 +138,36 @@ if submitted:
     if not company_name or not primary_trade or not phone or not email:
         st.error("Please fill out Company Name, Primary Trade(s), Phone, and Email.")
     else:
-        # Prepare the data
+        # Prepare the data row
         new_row = {
-            "Date Submitted": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "Company Name": company_name,
-            "Primary Trade": ", ".join(primary_trade),
-            "Other Trades": other_trades,
-            "Phone": phone,
-            "Email": email,
-            "Website": website,
-            "Areas Served": areas_served,
-            "Contact Name": contact_name,
-            "Biggest Project": biggest_project,
-            "Licensed & Insured": licensed_insured,
-            "Portfolio Link": portfolio_link,
-            "Notes": notes
+            "company_name": company_name,
+            "primary_trade": ", ".join(primary_trade),
+            "other_trades": other_trades,
+            "phone": phone,
+            "email": email,
+            "website": website,
+            "areas_served": areas_served,
+            "contact_name": contact_name,
+            "biggest_project": biggest_project,
+            "licensed_insured": licensed_insured,
+            "portfolio_link": portfolio_link,
+            "notes": notes
         }
 
         saved_successfully = False
         saved_to = ""
 
-        # Try Google Sheets first
+        # Try Supabase first
         try:
-            sheet = get_google_sheet()
-            if sheet:
-                sheet.append_row(list(new_row.values()))
+            supabase = get_supabase_client()
+            if supabase:
+                supabase.table("subcontractor_submissions").insert(new_row).execute()
                 saved_successfully = True
-                saved_to = "Google Sheets"
+                saved_to = "Supabase"
         except Exception as e:
             pass  # Will try CSV fallback
 
-        # Fallback to CSV if Google Sheets failed
+        # Fallback to CSV if Supabase fails
         if not saved_successfully:
             try:
                 if PENDING_CSV.exists():
@@ -180,7 +178,7 @@ if submitted:
 
                 df.to_csv(PENDING_CSV, index=False)
                 saved_successfully = True
-                saved_to = "CSV file"
+                saved_to = "CSV file (backup)"
             except Exception as e:
                 st.error("❌ Failed to save your submission.")
                 st.error("Please try again in a few minutes or contact us directly.")
@@ -189,5 +187,5 @@ if submitted:
         # Success message
         if saved_successfully:
             st.success("✅ Thank you! Your information has been submitted for review.")
-            st.info(f"Your submission was saved to {saved_to}.")
+            st.info(f"Your submission was saved to: **{saved_to}**")
             st.info("We’ll review your submission and reach out if we think there may be a good project fit.")
