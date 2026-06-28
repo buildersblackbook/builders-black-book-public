@@ -1,186 +1,396 @@
 #!/usr/bin/env python3
 """
-Builder's Black Book - Subcontractor Submission Form
-Stable version using CSV (with Google Sheets as optional secondary)
+Builder's Black Book - Complete Dashboard
 """
 
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+import sqlite3
 from pathlib import Path
-import gspread
+from datetime import datetime, timedelta
 
-# ================== PATHS ==================
-PENDING_CSV = Path("data/pending_subcontractors.csv")
+DB_PATH = Path("data/permits.db")
 ASSETS_PATH = Path("assets")
+SUBS_CSV = Path("data/subcontractors.csv")
+PENDING_CSV = Path("data/pending_subcontractors.csv")
 
-# Create data folder if it doesn't exist
-PENDING_CSV.parent.mkdir(parents=True, exist_ok=True)
-
-st.set_page_config(
-    page_title="Join Builder's Black Book",
-    page_icon="🔧",
-    layout="centered"
-)
-
-# ================== GOOGLE SHEETS (OPTIONAL) ==================
-def get_google_sheet():
-    try:
-        gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
-        sheet = gc.open("Builder's Black Book - Pending Submissions").sheet1
-        return sheet
-    except:
-        return None   # Return None if Google Sheets fails
-
+st.set_page_config(page_title="Builder's Black Book", layout="wide")
 
 # ================== LOGO HEADER ==================
-col_logo, col_title = st.columns([1, 4])
+col_logo, col_title = st.columns([1.2, 4])
 
 with col_logo:
     logo_path = ASSETS_PATH / "logo.svg"
     if logo_path.exists():
-        st.image(str(logo_path), width=110)
+        st.image(str(logo_path), width=240)
     else:
-        st.image("https://via.placeholder.com/110x38/1a365d/ffffff?text=BB", width=110)
+        st.image("https://via.placeholder.com/240x70/1a365d/ffffff?text=BB", width=240)
 
 with col_title:
-    st.title("Join Builder's Black Book")
-    st.caption("Get considered for projects in the Nashville area")
+    st.title("Builder's Black Book")
+    st.caption("Nashville Residential Permit Intelligence")
 
 st.markdown("---")
 
-# ================== INTRO ==================
-st.markdown("""
-Builder’s Black Book is a private network that connects quality subcontractors with active builders in the Nashville area.
+# Load permit data
+@st.cache_data
+def load_permit_data():
+    conn = sqlite3.connect(DB_PATH)
+    df = pd.read_sql("SELECT * FROM permits", conn)
+    conn.close()
+    df["date_issued"] = pd.to_datetime(df["date_issued"], errors="coerce")
+    return df
 
-We manually review every submission. If we believe you’re a good fit, we add you to our recommended list and share your information with trusted builders.
+df = load_permit_data()
 
-Your information stays private — we do not sell or distribute your data.
-""")
+# ================== TABS ==================
+tab1, tab2, tab3 = st.tabs(["📊 Overview", "👷 Contractors", "🔧 Sub-Contractors"])
 
-st.markdown("---")
+# ================== TAB 1: OVERVIEW ==================
+with tab1:
+    st.sidebar.header("Filters")
 
-# ================== FORM ==================
-st.subheader("Your Company")
+    min_date = df["date_issued"].min()
+    max_date = df["date_issued"].max()
+    date_range = st.sidebar.date_input("Date Issued Range", value=(min_date, max_date))
 
-col1, col2 = st.columns(2)
+    zip_codes = ["All"] + sorted(df["zip_code"].dropna().unique().tolist())
+    selected_zip = st.sidebar.selectbox("ZIP Code", zip_codes)
 
-with col1:
-    company_name = st.text_input("Company Name *")
-    primary_trade = st.multiselect(
-        "Primary Trades * (Select all that apply)",
-        options=[
-            "Framing / Carpentry", "Electrical", "Plumbing", "HVAC",
-            "Drywall & Insulation", "Painting", "Roofing", "Flooring",
-            "Concrete & Foundations", "Excavation & Site Work", "Masonry",
-            "Finish Carpentry / Trim", "Tile & Stone", "Landscaping & Hardscaping"
+    permit_types = ["All"] + sorted(df["permit_type"].dropna().unique().tolist())
+    selected_type = st.sidebar.selectbox("Permit Type", permit_types)
+
+    search_term = st.sidebar.text_input("Search Address or Contractor")
+
+    # Apply filters
+    filtered = df.copy()
+
+    if len(date_range) == 2:
+        filtered = filtered[
+            (filtered["date_issued"] >= pd.to_datetime(date_range[0])) &
+            (filtered["date_issued"] <= pd.to_datetime(date_range[1]))
         ]
-    )
-    other_trades = st.text_input("Other Trades You Do Well", placeholder="Example: Decks, Fencing, Siding")
 
-with col2:
-    areas_served = st.text_input("Main Areas You Work In", placeholder="ZIP codes or neighborhoods")
-    website = st.text_input("Website (optional)")
+    if selected_zip != "All":
+        filtered = filtered[filtered["zip_code"] == selected_zip]
 
-st.subheader("Contact Information")
-
-col3, col4 = st.columns(2)
-
-with col3:
-    phone = st.text_input("Phone Number *")
-    email = st.text_input("Email Address *")
-
-with col4:
-    contact_name = st.text_input("Main Contact Name")
-
-st.subheader("Your Experience")
-
-biggest_project = st.text_input(
-    "What’s the biggest project you’ve worked on? (optional)",
-    placeholder="Example: $850k custom home, 12-unit townhome project, etc."
-)
-
-st.subheader("Verification (Optional)")
-
-portfolio_link = st.text_input(
-    "Link to your work (Website, Instagram, Facebook, etc.)",
-    placeholder="https://www.yourcompany.com or Instagram link"
-)
-
-st.subheader("Licensing & Insurance")
-
-licensed_insured = st.radio(
-    "Are you licensed and insured?",
-    options=[
-        "Yes, I am both licensed and insured",
-        "I am licensed but not currently insured",
-        "I am not currently licensed or insured"
-    ]
-)
-
-if licensed_insured != "Yes, I am both licensed and insured":
-    st.info("We can connect you with insurance options if needed.")
-
-st.subheader("Additional Information")
-
-notes = st.text_area(
-    "Anything else we should know?",
-    placeholder="Examples:\n• What makes you reliable\n• Specialties or strengths\n• How you handle larger or more complex projects",
-    height=100
-)
-
-st.markdown("---")
-
-# ================== SUBMIT BUTTON ==================
-submitted = st.button("Submit My Information", type="primary", use_container_width=True)
-
-if submitted:
-    if not company_name or not primary_trade or not phone or not email:
-        st.error("Please fill out Company Name, Primary Trade(s), Phone, and Email.")
+    if selected_type != "All":
+        filtered = filtered[filtered["permit_type"] == selected_type]
     else:
-        new_row = {
-            "Date Submitted": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "Company Name": company_name,
-            "Primary Trade": ", ".join(primary_trade),
-            "Other Trades": other_trades,
-            "Phone": phone,
-            "Email": email,
-            "Website": website,
-            "Areas Served": areas_served,
-            "Contact Name": contact_name,
-            "Biggest Project": biggest_project,
-            "Licensed & Insured": licensed_insured,
-            "Portfolio Link": portfolio_link,
-            "Notes": notes
+        residential_mask = filtered["permit_type"].str.contains("residential", case=False, na=False)
+        filtered = filtered[residential_mask]
+
+    if search_term:
+        mask = (
+            filtered["address"].str.contains(search_term, case=False, na=False) |
+            filtered["contractor"].str.contains(search_term, case=False, na=False)
+        )
+        filtered = filtered[mask]
+
+    # Summary Metrics
+    col1, col2 = st.columns(2)
+    col1.metric("Total Permits", len(filtered))
+    col2.metric("Total Value", f"${filtered['construction_cost'].sum():,.0f}")
+
+    # Last 90 Days Snapshot
+    st.subheader("🔥 Last 90 Days Snapshot")
+    ninety_days_ago = datetime.now() - timedelta(days=90)
+    recent_df = filtered[filtered["date_issued"] >= ninety_days_ago]
+
+    c1, c2 = st.columns(2)
+    c1.metric("Recent Permits", len(recent_df))
+    c2.metric("Recent Value", f"${recent_df['construction_cost'].sum():,.0f}")
+
+    # Hot ZIP Codes
+    st.subheader("🔥 Hot ZIP Codes")
+    st.caption("ZIP codes with the most residential permit activity in the last 90 days")
+
+    if not recent_df.empty:
+        hot_zips = (
+            recent_df.groupby("zip_code")
+            .agg(permits=("permit_id", "count"), total_value=("construction_cost", "sum"))
+            .reset_index()
+            .sort_values("permits", ascending=False)
+            .head(6)
+        )
+        st.dataframe(
+            hot_zips,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "total_value": st.column_config.NumberColumn("Total Value", format="$%,.0f"),
+            }
+        )
+    else:
+        st.info("No recent residential activity found.")
+
+    st.divider()
+
+    # Recent Movers at a Glance
+    st.subheader("Recent Movers at a Glance")
+    st.caption("High-value residential permits (>$150k) issued in the last 90 days")
+
+    high_value = recent_df[recent_df["construction_cost"] >= 150000].head(15)
+
+    if not high_value.empty:
+        quick_cols = ["date_issued", "permit_type", "address", "zip_code", "construction_cost", "contractor"]
+        st.dataframe(
+            high_value[quick_cols].sort_values("construction_cost", ascending=False),
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "construction_cost": st.column_config.NumberColumn("Value", format="$%,.0f"),
+                "date_issued": st.column_config.DatetimeColumn("Date", format="YYYY-MM-DD"),
+            }
+        )
+    else:
+        st.info("No high-value recent residential permits found.")
+
+    st.divider()
+
+    # Main Table
+    st.subheader("All Residential Permits")
+
+    show_recent_only = st.toggle("Show only permits from the last 90 days", value=True)
+
+    if show_recent_only:
+        table_df = recent_df.copy()
+        st.caption(f"Showing {len(table_df):,} residential permits from the last 90 days")
+    else:
+        table_df = filtered.copy()
+        st.caption(f"Showing all {len(table_df):,} residential permits")
+
+    display_cols = ["permit_id", "permit_type", "address", "zip_code", 
+                    "construction_cost", "date_issued", "contractor"]
+
+    st.dataframe(
+        table_df[display_cols].sort_values("date_issued", ascending=False),
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "construction_cost": st.column_config.NumberColumn("Value", format="$%,.0f"),
+            "date_issued": st.column_config.DatetimeColumn("Date Issued", format="YYYY-MM-DD"),
         }
+    )
 
-        success = False
+    if st.button("Export Current View to CSV"):
+        csv = table_df.to_csv(index=False).encode("utf-8")
+        st.download_button("Download CSV", csv, "permits_export.csv", "text/csv")
 
-        # Try Google Sheets first
-        try:
-            sheet = get_google_sheet()
-            if sheet:
-                sheet.append_row(list(new_row.values()))
-                success = True
-        except:
-            pass  # If Google Sheets fails, we'll fall back to CSV
+# ================== TAB 2: CONTRACTORS ==================
+with tab2:
+    st.subheader("👷 Contractor Directory")
+    st.caption("Active General Contractors / Builders in Nashville")
 
-        # Fallback to CSV (more reliable on Streamlit Cloud)
-        if not success:
-            try:
-                if PENDING_CSV.exists():
-                    df = pd.read_csv(PENDING_CSV)
-                    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    ninety_days_ago = datetime.now() - timedelta(days=90)
+    recent_contractors = df[df["date_issued"] >= ninety_days_ago]
+
+    st.markdown("**Top Active Contractors (Last 90 Days)**")
+
+    if not recent_contractors.empty:
+        top_contractors = (
+            recent_contractors.groupby("contractor")
+            .agg(
+                permits=("permit_id", "count"),
+                total_value=("construction_cost", "sum"),
+                most_recent=("date_issued", "max")
+            )
+            .reset_index()
+            .sort_values("total_value", ascending=False)
+            .head(8)
+        )
+
+        st.dataframe(
+            top_contractors,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "total_value": st.column_config.NumberColumn("Total Value", format="$%,.0f"),
+                "most_recent": st.column_config.DatetimeColumn("Most Recent Permit", format="YYYY-MM-DD"),
+            }
+        )
+    else:
+        st.info("No recent contractor activity found.")
+
+    st.divider()
+
+    st.subheader("All Active Contractors")
+
+    contractor_summary = (
+        recent_contractors.groupby("contractor")
+        .agg(
+            total_permits=("permit_id", "count"),
+            total_value=("construction_cost", "sum"),
+            most_recent_permit=("date_issued", "max"),
+            primary_zip=("zip_code", lambda x: x.mode()[0] if len(x.mode()) > 0 else "N/A")
+        )
+        .reset_index()
+        .sort_values("total_value", ascending=False)
+    )
+
+    permit_counts = (
+        recent_contractors.groupby(["contractor", "permit_type"])
+        .size()
+        .reset_index(name="count")
+        .sort_values(["contractor", "count"], ascending=[True, False])
+    )
+
+    top3 = (
+        permit_counts.groupby("contractor")
+        .head(3)
+        .groupby("contractor")["permit_type"]
+        .apply(lambda x: ", ".join(x))
+        .reset_index()
+        .rename(columns={"permit_type": "top_permit_types"})
+    )
+
+    contractor_summary = contractor_summary.merge(top3, on="contractor", how="left")
+
+    search = st.text_input("🔍 Search Contractors", placeholder="Search by name...")
+
+    if search:
+        contractor_summary = contractor_summary[
+            contractor_summary.astype(str).apply(
+                lambda x: x.str.contains(search, case=False, na=False)
+            ).any(axis=1)
+        ]
+
+    st.dataframe(
+        contractor_summary,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "total_value": st.column_config.NumberColumn("Total Value", format="$%,.0f"),
+            "most_recent_permit": st.column_config.DatetimeColumn("Most Recent Permit", format="YYYY-MM-DD"),
+            "top_permit_types": st.column_config.TextColumn("Top 3 Permit Types"),
+        }
+    )
+
+    if st.button("Export Contractor Directory"):
+        csv = contractor_summary.to_csv(index=False).encode("utf-8")
+        st.download_button("Download CSV", csv, "contractor_directory.csv", "text/csv")
+
+# ================== TAB 3: SUB-CONTRACTORS ==================
+with tab3:
+    st.subheader("🔧 Sub-Contractors")
+    st.caption("Your private network of subcontractors")
+
+    # ========== ADD NEW SUBCONTRACTOR ==========
+    with st.expander("➕ Add New Subcontractor Manually", expanded=False):
+        with st.form("add_sub_form", clear_on_submit=True):
+            col1, col2 = st.columns(2)
+
+            with col1:
+                company = st.text_input("Company Name *")
+                primary_trade = st.text_input("Primary Trade *")
+                other_trades = st.text_input("Other Trades")
+                years = st.number_input("Years in Business", min_value=0, value=5)
+                phone = st.text_input("Phone")
+
+            with col2:
+                email = st.text_input("Email")
+                website = st.text_input("Website")
+                areas = st.text_input("Areas Served (ZIPs)")
+                company_size = st.selectbox("Company Size", ["1-5", "6-10", "11-20", "21-50+"], index=0)
+                recommended = st.selectbox("Recommended?", ["Yes", "No"], index=0)
+                notes = st.text_area("Notes")
+
+            if st.form_submit_button("Add Subcontractor", type="primary"):
+                if company and primary_trade:
+                    new_row = {
+                        "Company Name": company,
+                        "Primary Trade": primary_trade,
+                        "Other Trades": other_trades,
+                        "Years in Business": years,
+                        "Phone": phone,
+                        "Email": email,
+                        "Website": website,
+                        "Areas Served": areas,
+                        "Company Size": company_size,
+                        "Recommended": recommended,
+                        "Notes": notes,
+                        "Date Added": datetime.now().strftime("%Y-%m-%d")
+                    }
+                    subs_df = pd.concat([subs_df, pd.DataFrame([new_row])], ignore_index=True)
+                    subs_df.to_csv(SUBS_CSV, index=False)
+                    st.success(f"✅ {company} added!")
+                    st.rerun()
                 else:
-                    df = pd.DataFrame([new_row])
+                    st.error("Company Name and Primary Trade are required.")
 
-                df.to_csv(PENDING_CSV, index=False)
-                success = True
-            except Exception as e:
-                st.error("❌ Failed to save your submission.")
-                st.error("Please try again in a few minutes.")
-                st.stop()
+    st.divider()
 
-        if success:
-            st.success("✅ Thank you! Your information has been submitted for review.")
-            st.info("We’ll review your submission and reach out if we think there may be a good project fit.")
+    # ========== PENDING SUBMISSIONS FROM FORM ==========
+    st.subheader("📥 Pending Submissions from Form")
+    st.caption("New subcontractors who filled out the online form")
+
+    if PENDING_CSV.exists():
+        try:
+            pending_df = pd.read_csv(PENDING_CSV)
+            
+            if pending_df.empty:
+                st.info("No pending submissions yet.")
+            else:
+                st.success(f"You have **{len(pending_df)}** pending submission(s).")
+                
+                st.dataframe(
+                    pending_df,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "Date Submitted": st.column_config.DatetimeColumn("Submitted", format="YYYY-MM-DD HH:mm"),
+                    }
+                )
+                
+                csv = pending_df.to_csv(index=False).encode("utf-8")
+                st.download_button(
+                    label="📥 Download Pending Submissions",
+                    data=csv,
+                    file_name="pending_submissions.csv",
+                    mime="text/csv"
+                )
+                
+        except Exception as e:
+            st.error("Error reading pending submissions file.")
+            st.error(str(e))
+    else:
+        st.info("No pending submissions file found yet.")
+
+    st.divider()
+
+    # ========== YOUR APPROVED SUBCONTRACTORS ==========
+    st.subheader("✅ Your Approved Subcontractors")
+
+    if SUBS_CSV.exists():
+        subs_df = pd.read_csv(SUBS_CSV)
+    else:
+        subs_df = pd.DataFrame()
+
+    search = st.text_input("🔍 Search Approved Subs", placeholder="Search by name or trade...")
+
+    display_df = subs_df.copy()
+    if search:
+        display_df = display_df[
+            display_df.astype(str).apply(
+                lambda x: x.str.contains(search, case=False, na=False)
+            ).any(axis=1)
+        ]
+
+    if display_df.empty:
+        st.info("No approved subcontractors yet.")
+    else:
+        st.dataframe(
+            display_df,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "Years in Business": st.column_config.NumberColumn("Years"),
+                "Recommended": st.column_config.TextColumn("Recommended?"),
+            }
+        )
+
+        if st.button("Export Approved Subcontractors"):
+            csv = display_df.to_csv(index=False).encode("utf-8")
+            st.download_button("Download CSV", csv, "approved_subcontractors.csv", "text/csv")
+
+st.caption("Data source: Metro Nashville Open Data | Your Private Network")
