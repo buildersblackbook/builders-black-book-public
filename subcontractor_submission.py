@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 """
 Builder's Black Book - Subcontractor Submission Form
-With better error handling
+Stable version using CSV (with Google Sheets as optional secondary)
 """
 
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+from pathlib import Path
 import gspread
 
-# ================== FILE PATHS ==================
-PENDING_CSV = "data/pending_subcontractors.csv"
-ASSETS_PATH = "assets"
+# ================== PATHS ==================
+PENDING_CSV = Path("data/pending_subcontractors.csv")
+ASSETS_PATH = Path("assets")
+
+# Create data folder if it doesn't exist
+PENDING_CSV.parent.mkdir(parents=True, exist_ok=True)
 
 st.set_page_config(
     page_title="Join Builder's Black Book",
@@ -19,27 +23,25 @@ st.set_page_config(
     layout="centered"
 )
 
-# ================== GOOGLE SHEETS CONNECTION ==================
-import gspread
-
-@st.cache_resource
-def get_gsheet_connection():
+# ================== GOOGLE SHEETS (OPTIONAL) ==================
+def get_google_sheet():
     try:
-        # Use service_account_from_dict (more reliable on Streamlit Cloud)
         gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
         sheet = gc.open("Builder's Black Book - Pending Submissions").sheet1
         return sheet
-    except Exception as e:
-        st.error("❌ Unable to connect to the submission system.")
-        st.error(f"Error type: {type(e).__name__}")
-        st.error("Please try again in a few minutes.")
-        st.stop()
+    except:
+        return None   # Return None if Google Sheets fails
+
 
 # ================== LOGO HEADER ==================
 col_logo, col_title = st.columns([1, 4])
 
 with col_logo:
-    st.image("https://via.placeholder.com/110x38/1a365d/ffffff?text=BB", width=110)
+    logo_path = ASSETS_PATH / "logo.svg"
+    if logo_path.exists():
+        st.image(str(logo_path), width=110)
+    else:
+        st.image("https://via.placeholder.com/110x38/1a365d/ffffff?text=BB", width=110)
 
 with col_title:
     st.title("Join Builder's Black Book")
@@ -136,32 +138,49 @@ if submitted:
     if not company_name or not primary_trade or not phone or not email:
         st.error("Please fill out Company Name, Primary Trade(s), Phone, and Email.")
     else:
-        new_row = [
-            datetime.now().strftime("%Y-%m-%d %H:%M"),
-            company_name,
-            ", ".join(primary_trade),
-            other_trades,
-            phone,
-            email,
-            website,
-            areas_served,
-            contact_name,
-            biggest_project,
-            licensed_insured,
-            portfolio_link,
-            notes
-        ]
+        new_row = {
+            "Date Submitted": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "Company Name": company_name,
+            "Primary Trade": ", ".join(primary_trade),
+            "Other Trades": other_trades,
+            "Phone": phone,
+            "Email": email,
+            "Website": website,
+            "Areas Served": areas_served,
+            "Contact Name": contact_name,
+            "Biggest Project": biggest_project,
+            "Licensed & Insured": licensed_insured,
+            "Portfolio Link": portfolio_link,
+            "Notes": notes
+        }
 
-        # Try to save to Google Sheets
+        success = False
+
+        # Try Google Sheets first
         try:
-            if sheet is None:
-                st.error("❌ Submission system is currently unavailable.")
-                st.error("Please try again in a few minutes or contact us directly.")
-            else:
-                sheet.append_row(new_row)
-                st.success("✅ Thank you! Your information has been submitted for review.")
-                st.info("We’ll review your submission and reach out if we think there may be a good project fit.")
-        except Exception as e:
-            st.error("❌ Something went wrong while saving your submission.")
-            st.error(f"Error: {str(e)}")
-            st.warning("Please try again in a few minutes.")
+            sheet = get_google_sheet()
+            if sheet:
+                sheet.append_row(list(new_row.values()))
+                success = True
+        except:
+            pass  # If Google Sheets fails, we'll fall back to CSV
+
+        # Fallback to CSV (more reliable on Streamlit Cloud)
+        if not success:
+            try:
+                if PENDING_CSV.exists():
+                    df = pd.read_csv(PENDING_CSV)
+                    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+                else:
+                    df = pd.DataFrame([new_row])
+
+                df.to_csv(PENDING_CSV, index=False)
+                success = True
+            except Exception as e:
+                st.error("❌ Failed to save your submission.")
+                st.error("Please try again in a few minutes.")
+                st.stop()
+
+        if success:
+            st.success("✅ Thank you! Your information has been submitted for review.")
+            st.info("We’ll review your submission and reach out if we think there may be a good project fit.")
