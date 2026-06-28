@@ -46,9 +46,9 @@ st.markdown("---")
 st.markdown("""
 Builder’s Black Book is a private network that connects quality subcontractors with active builders in the Nashville area.
 
-We manually review every submission. If we believe you’re a good fit, we add you to our recommended list and share your information with trusted builders.
+We manually review every submission. Please be descriptive. We will be contacting complete submissions. Upon confirmation, then eligible to be shared with trusted builders.
 
-Your information stays private — we do not sell or distribute your data.
+Your information stays private — we do not sell or distribute your data. We use your data to connect you with leads respective to your trade. 
 """)
 st.markdown("---")
 
