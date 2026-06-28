@@ -61,8 +61,8 @@ with col1:
     primary_trade = st.multiselect(
         "Primary Trades * (Select all that apply)",
         options=["Framing / Carpentry", "Electrical", "Plumbing", "HVAC",
-                 "Drywall & Insulation", "Painting", "Roofing", "Flooring",
-                 "Concrete & Foundations", "Excavation & Site Work", "Masonry",
+                 "Drywall & Insulation", "Photography", "Staging", "Painting", "Roofing", "Flooring",
+                 "Concrete & Foundations", "Excavation & Site Work", "Masonry", "Real Estate Agent", "Mortage Lender",
                  "Finish Carpentry / Trim", "Tile & Stone", "Landscaping & Hardscaping", "Insurance", "Cleaning", "Window Installation", "Pressure Washing", "General Labor"]
     )
     other_trades = st.text_input("Other Trades You Do Well", placeholder="Example: Decks, Fencing, Siding")
